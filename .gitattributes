@@ -1,0 +1,17 @@
+# Ensure consistent line endings across platforms
+# Set text files to use LF in the repository
+* text=auto eol=lf
+
+# Explicitly treat shell scripts and Makefiles as text with LF
+*.sh text eol=lf
+Makefile text eol=lf
+
+# Go files
+*.go text eol=lf
+
+# Markdown and docs
+*.md text eol=lf
+README.md text eol=lf
+
+# Dotenv files (if you keep .env in repo) - treat as text
+*.env text eol=lf
