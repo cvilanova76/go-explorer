@@ -21,7 +21,8 @@ func main() {
 	countryName := strings.TrimSpace(os.Args[1])
 
 	repo := repositories.NewRestCountriesAPIClient(config)
-	s := services.NewCountryService(repo)
+	newsRepo := repositories.NewGNewsAPIClient(config)
+	s := services.NewCountryService(repo, newsRepo)
 
 	err := s.DisplayCountryByName(countryName)
 	if err != nil {
