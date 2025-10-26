@@ -1,25 +1,49 @@
 # GoExplorer
 
-A Go-based CLI tool for country information and news data.
+GoExplorer is a Go-based web application that provides country information and related news. The project started as a CLI tool and has been refactored to expose an HTTP API while keeping the CLI mode as fallback.
 
-## Quick Start
+## Quick start
+
+1. Create a `.env` file in the project root (copy from `.env.example` if present) and set the required API keys and base URLs:
+
+```env
+REST_COUNTRIES_API_BASE_URL=https://restcountries.com/v3.1
+GNEWS_API_BASE_URL=https://gnews.io/api/v4
+GNEWS_API_KEY=your_gnews_api_key_here
+```
+
+2. Install dependencies:
 
 ```bash
-# Get API key from gnews.io
-# Set up environment variables in .env file (copy .env.example -> .env)
-
-# Install dependencies
 go mod tidy
+```
 
-# Run the application from project root (recommended):
-go run ./cmd/cli <country_name>
+3. Run the application
 
-# Or enter the command directory and run:
-cd cmd/cli
-go run . <country_name>
+- Start the HTTP server (default port 8080):
 
-# Using Makefile (from project root):
-make run COUNTRY=Portugal
+```bash
+go run ./cmd/cli --serve --port 8080
+```
+
+The server exposes a simple endpoint to get country info and related news:
+
+```
+GET /api/country/{name}
+```
+
+- Use the CLI mode for quick lookups (positional country name):
+
+```bash
+go run ./cmd/cli Brazil
+```
+
+- Makefile helpers (from project root):
+
+```bash
+make run COUNTRY=Brazil      # run CLI mode
+make serve PORT=8080           # (if you want) start the server via Makefile
+make build                     # build the binary into ./bin
 ```
 
 ## Documentation
@@ -32,17 +56,22 @@ The complete documentation includes:
 - API configuration and usage
 - Code structure and development guidelines
 
-## Project Structure
+## Project structure
 
 ```
 goexplorer/
-├── cmd/cli/           # CLI application entry point
-├── internal/          # Private application code
-│   ├── models/        # Domain models
-│   ├── repositories/  # API clients
-│   └── services/      # Business logic
-├── configs/           # Configuration management
-└── docs/              # 📖 Full documentation
+├── cmd/cli/               # CLI / server entry point (main.go)
+├── internal/              # Private application code
+│   ├── clients/           # HTTP client wrappers and shared HTTP code
+│   ├── dtos/              # Data transfer objects for API responses
+│   ├── handlers/          # HTTP handlers (server-side)
+│   ├── models/            # Domain models
+│   ├── repositories/      # Repository abstractions / API clients
+│   └── services/          # Business logic and orchestration
+├── configs/               # Configuration loading and env helpers
+├── docs/                  # Documentation
+├── Makefile               # helper targets (run, serve, build)
+└── .gitattributes         # line-ending rules
 ```
 
 ## Contributing

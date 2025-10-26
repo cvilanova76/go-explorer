@@ -1,11 +1,10 @@
 # GoExplorer
 
-A Go-based CLI tool application that provides comprehensive country information and news data.
+GoExplorer is a Go-based web application that provides comprehensive country information and news data. The project began as a CLI tool and has been refactored to expose an HTTP API while keeping the CLI as fallback.
 
 ## Overview
 
-GoExplorer is a command-line interface tool that enables users to search for detailed information about any country and retrieve current top news stories for that country. This project demonstrates Go programming proficiency while integrating with multiple external APIs.
-The choice of APIs reflects the practitioner's personal interest in, and knowledge of, geopolitics and media.
+GoExplorer allows users to retrieve detailed country information (from RestCountries) and current top news stories (from GNews.io).  The choice of APIs reflects the practitioner's personal interest in, and knowledge of, geopolitics and media. The refactor introduced a server-oriented architecture while preserving the original CLI behavior for quick, local queries.
 
 ## Roadmap
 
@@ -13,45 +12,53 @@ The choice of APIs reflects the practitioner's personal interest in, and knowled
 - **Country Information**: Integration with RestCountries API for comprehensive country data retrieval
 - **News Integration**: Integration with GNews.io API for fetching top news stories by country
 - Real-time news data access from multiple sources
-- **Database**: Integration with a database to store country and news data
-
+- **HTTP Server**: Expose an HTTP API endpoint (e.g. `/api/country/{name}`) to serve country data and news
+- **CLI fallback**: Keep a lightweight CLI mode for quick lookups
 
 ### Planned Features (subsequent phases)
 - **Web Scraper**: Custom news data scraper targeting leading media sources from specific countries
 - **Access through authentication**: User authentication to gain full access to country and news database (basic access without login)
-- **Web-based interface**: Build web interface that leverages the CLI tool's core Go packages
+- **Database**: Integration with a database to store country and news data
+- **Web-based interface**: Development of basic front-end to showcase functionalities
 
 ## Implementation Phases
 
-### Phase 1: CLI Tool Foundation
-- **Primary Focus**: Command-line interface application
-- **Learning Objective**: Master Go fundamentals (HTTP clients, JSON handling, error management, CLI parsing)
+### Phase 1: Server foundation (plus CLI)
+- **Primary Focus**: HTTP server exposing a small REST API and CLI for ad-hoc use
+- **Learning Objective**: Organize code for server usage (HTTP handlers, DTOs), while keeping clean CLI flow
 - **Deliverables**:
-  - Fully functional CLI tool for country information and news retrieval
+  - HTTP server exposing `/api/country/{name}`
+  - CLI command for single-country lookups
   - Clean, modular Go codebase following best practices
-  - Comprehensive error handling and user feedback
-  - Single binary deployment
+  - Comprehensive error handling and JSON-friendly responses
 
 **Example Usage:**
-```bash
-# Basic country lookup
-./goexplorer brazil
 
-# Advanced usage with flags
-./goexplorer --country="United States" --news-limit=5
-./goexplorer --country="Japan" --format=json
+Run the server (default port 8080):
+
+```bash
+go run ./cmd/cli --serve --port 8080
 ```
 
-### Phase 2: Optional Web Interface (Future Enhancement)
+Request from the browser or curl:
+
+```bash
+curl http://localhost:8080/api/country/Brazil
+```
+
+Quick CLI lookup (positional country name):
+
+```bash
+go run ./cmd/cli Brazil
+```
+
+### Phase 2: Web Interface (Future Enhancement)
 - **Secondary Focus**: Web-based user interface
-- **Approach**: Build web interface that leverages the CLI tool's core Go packages
 - **Benefits**: 
   - Rich visual presentation (flags, maps, charts)
   - Better user experience for non-technical users
   - Portfolio showcase enhancement
 - **Implementation**: Web app using the same underlying Go modules developed in Phase 1
-
-**Rationale**: Starting with CLI ensures solid Go foundations before adding UI complexity. The modular design allows easy transition to web interface later.
 
 ## Project Goals
 
@@ -77,8 +84,7 @@ The application will enable users to:
 - Support for various country name formats (official name, common name, etc.)
 
 #### API Integration
-- The program must connect to the public Restcountries API to fetch information about the user-specified country. Wrapper
-abandoned due to data limitation
+- The program must connect to the public Restcountries API to fetch information about the user-specified country. Wrapper abandoned due to data limitation
 - Integration with GNews.io API for fetching top news stories by country. API key is required.
 
 #### Data Processing
@@ -93,20 +99,6 @@ The program must handle errors clearly and gracefully, including:
 - API rate limiting or authentication issues
 - Network connectivity issues
 
-#### Output
-The program must display the following country information in an organized and easy-to-read format in the terminal:
-- Common and Official country name
-- Capital city
-- Population
-- Region
-- Subregion
-- Languages
-- Currencies
-- Demonym
-- Flag (links to PNG and SVG images)
-- Maps (Google Maps and OpenStreetMaps links)
-- Top news stories for the country
-
 ### Technical Requirements
 - Clean, modular code structure
 - Proper separation of concerns
@@ -114,37 +106,32 @@ The program must display the following country information in an organized and e
 - Clear documentation
 - Following Go best practices and conventions
 
-## Code Structure
-
-To maintain clean and organized code, we follow a modular structure, separating different responsibilities into functions and, when necessary, into separate files.
-
-### File Organization
-(Currently)
+### File organization
 
 ```
 goexplorer/
 ├── cmd/
 │   └── cli/
-│       └── main.go              # CLI application entry point
+│       └── main.go              # CLI / server entry point
 ├── configs/
 │   └── config.go                # Configuration struct and loading logic
 ├── internal/                    # Private application code (cannot be imported externally)
-│   ├── models/
-│   │   ├── country.go           # Domain models for country data
-│   │   └── news.go              # Domain models for news data
-│   ├── repositories/
-│   │   ├── restcountries.go     # RestCountries API client implementation
-│   │   └── gnews.go             # GNews API client implementation
-│   └── services/
-│       └── country.go           # Country service (orchestrates repositories)
+│   ├── clients/                 # HTTP client wrappers and shared HTTP code
+│   ├── dtos/                    # DTOs used to shape API responses
+│   ├── handlers/                # HTTP handlers for server endpoints
+│   ├── models/                  # Domain models for country, news data and users
+│   ├── repositories/            # Repository interfaces and implementations
+│   └── services/                # Business logic and orchestration
 ├── docs/
 │   └── README.md                # This documentation file
-├── .env                         # Environment variables (API keys, base URLs)
+├── .env                         # Environment variables (API keys, host URLs)
+├── .gitattributes               # line-ending normalization
+├── Makefile
 ├── go.mod                       # Go module file
 └── go.sum                       # Go module checksums
 ```
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
@@ -154,32 +141,52 @@ goexplorer/
 ### Installation
 
 1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd goexplorer
-   ```
+  ```bash
+  git clone <repository-url>
+  cd goexplorer
+  ```
 
-2. Install dependencies:
-   ```bash
-   go mod tidy
-   ```
+2. Create a `.env` file in the project root (copy from `.env.example` if present) and set required variables (see below).
 
-3. Run the application:
-   ```bash
-   go run main.go
-   ```
+3. Install dependencies:
+  ```bash
+  go mod tidy
+  ```
 
-## API Configuration
+4. Run the application
 
-### Required API Keys
+- Start the HTTP server (recommended for the refactor):
+
+```bash
+go run ./cmd/cli --serve --port 8080
+```
+
+- Or use the CLI fallback for a single country lookup:
+
+```bash
+go run ./cmd/cli Brazil
+```
+
+Makefile helpers:
+
+```bash
+make run COUNTRY=Brazil      # run CLI mode
+make serve PORT=8080           # start server (if Makefile target exists)
+make build                     # build the binary into ./bin
+```
+
+## API configuration
+
+### Required API keys
 
 - **GNews.io**: Sign up at [gnews.io](https://gnews.io) to get your API key
 - **RestCountries.com**: No API key required - free public API
 
-### Environment Variables
+### Environment variables
 
-Create a `.env` file in the project root:
-```
+Create a `.env` file in the project root (or copy from `.env.example`):
+
+```env
 REST_COUNTRIES_API_BASE_URL=https://restcountries.com/v3.1
 GNEWS_API_BASE_URL=https://gnews.io/api/v4
 GNEWS_API_KEY=your_gnews_api_key_here
@@ -187,7 +194,84 @@ GNEWS_API_KEY=your_gnews_api_key_here
 
 ## Usage
 
-[Usage examples will be added as features are implemented]
+The HTTP API exposes the endpoint:
+
+```
+GET /api/country/{name}
+```
+
+Examples below show expected JSON responses for successful and error cases.
+
+### Success response (200)
+
+Request:
+
+```bash
+curl -s http://localhost:8080/api/country/Brazil
+```
+
+Example JSON response:
+
+```json
+{
+  "country": {
+    "name": {"common": "Brazil", "official": "Federative Republic of Brazil"},
+    "capital": ["Brasilia"],
+    "region": "Americas",
+    "subregion": "South America",
+    "population": 212559409,
+    "demonyms": {"eng": {"f": "Brazilian", "m": "Brazilian"}},
+    "currencies": {"BRL": {"name": "Brazilian real", "symbol": "R$"}},
+    "languages": {"por": "Portuguese"},
+    "flags": {"png": "https://flagcdn.com/w320/br.png", "svg": "https://flagcdn.com/br.svg"},
+    "maps": {"googleMaps": "https://goo.gl/maps/waCKk21HeeqFzkNC9", "openStreetMaps": "https://www.openstreetmap.org/relation/59470"},
+    "cca2": "BR"
+  },
+  "newsArticles": [
+    {
+      "id": "",
+      "title": "Major news headline for Brazil",
+      "description": "Short description of the article...",
+      "content": "Full article content or excerpt...",
+      "url": "https://news.example.com/article/123",
+      "image": "https://news.example.com/image.jpg",
+      "publishedAt": "2025-10-25T12:34:56Z",
+      "lang": "en",
+      "source": {"id": "news-example", "name": "News Example", "url": "https://news.example.com", "country": "br"}
+    }
+  ],
+  "newsTotal": 1
+}
+```
+
+Notes:
+- `country` is the `models.Country` object mapped into the response DTO.
+- `newsArticles` is a slice of `models.Article` (limited to a configured maximum).
+- `newsTotal` is the total number of articles reported by the news provider for the country.
+
+### Error responses
+
+If the country is not found or an internal error occurs, the service returns a JSON error body with an `error` field.
+
+Example 404 / Not Found (country not found):
+
+```http
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{"error": "country 'Atlantis' not found"}
+```
+
+Example 500 / Internal Server Error (upstream failure):
+
+```http
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+
+{"error": "failed to fetch news: gnews api call failed: ..."}
+```
+
+The handler returns meaningful error messages for common failure modes (missing parameter, not found, upstream API errors). Clients should inspect the HTTP status code and the `error` field in the JSON body.
 
 ## Contributing
 
