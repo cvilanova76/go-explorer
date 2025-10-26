@@ -11,8 +11,8 @@ import (
 
 type Config struct {
 	Environment             string
-	RestCountriesAPIBaseURL string
-	GNewsAPIBaseURL         string
+	RestCountriesAPIHostURL string
+	GNewsAPIHostURL         string
 	GNewsAPIKey             string
 }
 
@@ -31,8 +31,8 @@ func LoadConfig() *Config {
 
 	return &Config{
 		Environment:             os.Getenv("GO_ENV"),
-		RestCountriesAPIBaseURL: os.Getenv("REST_COUNTRIES_API_BASE_URL"),
-		GNewsAPIBaseURL:         os.Getenv("GNEWS_API_BASE_URL"),
+		RestCountriesAPIHostURL: os.Getenv("REST_COUNTRIES_API_BASE_URL"),
+		GNewsAPIHostURL:         os.Getenv("GNEWS_API_BASE_URL"),
 		GNewsAPIKey:             os.Getenv("GNEWS_API_KEY"),
 	}
 }
